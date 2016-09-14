@@ -78,17 +78,55 @@ var filterlist = (source, minDistance) =>
     return isMatched;
   };
 
-var match = (sourceData, targetData) =>
-  sourceData.map((source) => {
-    //var _item = Object.assign({}, item);
-    var list = targetData.filter((target) => target.event_datetime === source.event_datetime);
+var match = (sourceData, targetData) => {
+  sourceData.forEach(function (source) {
     var minDistance = 100000;
-    var target = list.filter(filterlist(source, minDistance));
-    return {
-      source: source,
-      target: target,
-    };
+    targetData.forEach(function (target) {
+      if (target.event_datetime === source.event_datetime) {
+        var l = new Levenshtein(source.placement_name, target.placement_name);
+        var isMatched = false;
+        if (l.distance < minDistance) {
+          var sourcePlacementName = source.placement_name.match(/(\d+x\d+)/);
+          var targetPlacementName = target.placement_name.match(/(\d+x\d+)/);
+
+          if (sourcePlacementName && targetPlacementName) {
+            isMatched = (sourcePlacementName[0] === targetPlacementName[0]);
+          } else if (sourcePlacementName === targetPlacementName) {
+            // i.e. if both are null or undefined
+
+            isMatched = true;
+          }
+
+          if (isMatched) {
+            minDistance = l.distance;
+          }
+        }
+
+      }
+    });
+
+    // var list = targetData.filter((target) => target.event_datetime === source.event_datetime);
+    // var minDistance = 100000;
+    // var target = list.filter(filterlist(source, minDistance));
+    // return {
+    //   source: source,
+    //   target: target,
+    // };
   });
+};
+
+
+
+  // sourceData.map((source) => {
+  //   //var _item = Object.assign({}, item);
+  //   var list = targetData.filter((target) => target.event_datetime === source.event_datetime);
+  //   var minDistance = 100000;
+  //   var target = list.filter(filterlist(source, minDistance));
+  //   return {
+  //     source: source,
+  //     target: target,
+  //   };
+  // });
 
 module.exports.initMatch = function () {
   var fpaMatch = match(fpaData, tpaData);
